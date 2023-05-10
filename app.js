@@ -1,10 +1,12 @@
 const express = require("express");
 const app = express();
 const { getTopics } = require("./controllers/topics.controller");
-
-app.use(express.json());
+const { getEndpoints } = require("./controllers/endpoints.controller");
 
 app.get("/api/topics", getTopics);
+
+//3.5
+app.get("/api", getEndpoints);
 
 app.use((err, req, res, next) => {
   console.log(err, "errorrrr");
@@ -12,14 +14,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-
-// Responds with:
-
-// an array of topic objects, each of which should have the following properties:
-// slug
-// description
-// As this is the first endpoint you will need to set up your testing suite.
-
-// Errors handled.
-
-// Errors to Consider - add errors to handle as items to the checklist
