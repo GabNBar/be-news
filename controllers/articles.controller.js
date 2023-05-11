@@ -13,7 +13,11 @@ exports.getArticleById = (req, res, next) => {
 };
 
 exports.getArticles = (req, res, next) => {
-  fetchArticles().then((allArticles) => {
-    res.status(200).send({ allArticles });
-  }).catch;
+  fetchArticles()
+    .then((allArticles) => {
+      res.status(200).send({ allArticles });
+    })
+    .catch((err) => {
+      next(err);
+    });
 };
