@@ -12,12 +12,18 @@ app.get("/api", getEndpoints);
 app.get("/api/articles/:article_id", getArticleById);
 
 app.use((err, req, res, next) => {
-  console.log(err, "errorrrr");
-  if (err.status === 404) {
+  if (err.code === "22P02") {
+    res
+      .status(400)
+      .send({ msg: "Bad request, no ID provided for the article." });
+  } else if (err.status === 404) {
     res.status(404).send({ msg: "Article not found!" });
-  } else {
-    res.status(500).send("Something went wrong!");
   }
+});
+
+app.use((err, req, res, next) => {
+  console.log(err, "last error handling-middleware!");
+  res.status(500).send("Something went wrong!");
 });
 
 module.exports = app;

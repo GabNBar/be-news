@@ -70,4 +70,15 @@ describe("GET /api/articles/:article_id", () => {
         expect(res.body.msg).toBe("Article not found!");
       });
   });
+
+  test("responds with status 400 for bad request article ID", () => {
+    return request(app)
+      .get("/api/articles/gabe")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(
+          "Bad request, no ID provided for the article."
+        );
+      });
+  });
 });
