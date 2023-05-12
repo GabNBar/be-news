@@ -89,15 +89,14 @@ describe("GET /api/articles/:article_id", () => {
 
 //5
 describe("/api/articles", () => {
-  test("GET - status 200 - responds list of articles sorted date descending", () => {
+  test("GET - status 200 - responds list of articles", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
       .then((response) => {
-        const { allArticles } = response.body;
-
-        expect(allArticles.length > 0).toBe(true);
-        allArticles.forEach((article) => {
+        const { articles } = response.body;
+        expect(articles.length === 12).toBe(true);
+        articles.forEach((article) => {
           expect(article).toHaveProperty("article_id");
           expect(article).toHaveProperty("author");
           expect(article).toHaveProperty("title");
@@ -110,8 +109,22 @@ describe("/api/articles", () => {
           expect(typeof article.body).toBe("undefined");
         });
 
-        expect(allArticles).toBeSortedBy("created_at", {
+        expect(articles).toBeSortedBy("created_at", {
           descending: true,
+        });
+      });
+  });
+  test("GET - status 200 - responds list of articles sorted date descending", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((response) => {
+        const { articles } = response.body;
+
+        articles.forEach(() => {
+          expect(articles).toBeSortedBy("created_at", {
+            descending: true,
+          });
         });
       });
   });
