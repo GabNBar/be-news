@@ -3,6 +3,7 @@ const db = require("../db/connection");
 const request = require("supertest");
 const testData = require("../db/data/test-data/index.js");
 const seed = require("../db/seeds/seed");
+require("jest-sorted");
 
 beforeEach(() => {
   return seed(testData);
@@ -46,7 +47,7 @@ describe("/api", () => {
 });
 
 describe("GET /api/articles/:article_id", () => {
-  test.only("responds with status 200 and the requested article", () => {
+  test("responds with status 200 and the requested article", () => {
     return request(app)
       .get("/api/articles/1")
       .expect(200)
@@ -82,6 +83,49 @@ describe("GET /api/articles/:article_id", () => {
         expect(res.body.msg).toBe(
           "Bad request, no ID provided for the article."
         );
+      });
+  });
+});
+
+//5
+describe("/api/articles", () => {
+  test("GET - status 200 - responds list of articles", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((response) => {
+        const { articles } = response.body;
+        expect(articles.length === 12).toBe(true);
+        articles.forEach((article) => {
+          expect(article).toHaveProperty("article_id");
+          expect(article).toHaveProperty("author");
+          expect(article).toHaveProperty("title");
+          expect(article).toHaveProperty("topic");
+          expect(article).toHaveProperty("created_at");
+          expect(article).toHaveProperty("votes");
+          expect(article).toHaveProperty("article_img_url");
+          expect(article).toHaveProperty("comment_count");
+
+          expect(typeof article.body).toBe("undefined");
+        });
+
+        expect(articles).toBeSortedBy("created_at", {
+          descending: true,
+        });
+      });
+  });
+  test("GET - status 200 - responds list of articles sorted date descending", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((response) => {
+        const { articles } = response.body;
+
+        articles.forEach(() => {
+          expect(articles).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
       });
   });
 });
