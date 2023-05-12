@@ -10,7 +10,6 @@ exports.fetchArticles = () => {
       ORDER BY articles.created_at DESC;`
     )
     .then((articles) => {
-      console.log(articles.rows);
       return articles.rows;
     });
 };
