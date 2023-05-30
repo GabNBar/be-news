@@ -6,18 +6,29 @@ const {
   getArticleById,
   getArticles,
   getCommentsByArticle,
+  patchArticlesVotes,
 } = require("./controllers/articles.controller");
+const { postCommentById } = require("./controllers/comments.controller");
+const cors = require(cors());
+
+app.use(cors());
+
+app.use(express.json());
 
 app.get("/api/topics", getTopics);
-
 //3.5
 app.get("/api", getEndpoints);
 //4
 app.get("/api/articles/:article_id", getArticleById);
 //5
 app.get("/api/articles", getArticles);
-//6
+//6 DOESN'T WORK
 app.get("/api/:article_id/comments", getCommentsByArticle);
+//7
+app.post("/api/articles/:article_id/comments", postCommentById);
+
+//8
+app.patch("/api/articles/:article_id", patchArticlesVotes);
 
 app.use((err, req, res, next) => {
   if (err.code === "22P02") {

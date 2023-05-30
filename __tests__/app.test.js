@@ -132,15 +132,15 @@ describe("GET /api/:article_id/articles", () => {
       .get("/api/1/comments")
       .expect(200)
       .then((res) => {
-        const { allComments } = res.body;
+        const { comments } = res.body;
 
         //Assert that comments are coming in.
-        expect(allComments.length > 0).toBe(true);
+        expect(comments.length > 0).toBe(true);
 
         //Assert that we get the amount of comments we are expecting.
-        expect(allComments.length === 11).toBe(true);
+        expect(comments.length === 11).toBe(true);
 
-        allComments.forEach((comment) => {
+        comments.forEach((comment) => {
           expect(comment).toHaveProperty("comment_id");
           expect(comment).toHaveProperty("body");
           expect(comment).toHaveProperty("article_id");
@@ -156,10 +156,10 @@ describe("GET /api/:article_id/articles", () => {
       .get("/api/1/comments")
       .expect(200)
       .then((res) => {
-        const { allComments } = res.body;
+        const { comments } = res.body;
 
-        allComments.forEach(() => {
-          expect(allComments).toBeSortedBy("created_at", {
+        comments.forEach(() => {
+          expect(comments).toBeSortedBy("created_at", {
             descending: true,
           });
         });
@@ -172,6 +172,212 @@ describe("GET /api/:article_id/articles", () => {
       .expect(404)
       .then((res) => {
         expect(res.body.msg).toBe("No comments here.🙀");
+      });
+  });
+});
+
+// 7
+describe.skip("POST 201: responds with inserted comment", () => {
+  test("that a valid format is inserted into the database and the created comment is returned", () => {
+    const articleId = 1;
+    const newComment = {
+      username: "butter_bridge",
+      body: "this is a test comment.",
+    };
+    return request(app)
+      .post(`/api/articles/${articleId}/comments`)
+      .send(newComment)
+      .expect(201)
+      .then((response) => {
+        expect(response.body).toHaveProperty("comment");
+        const returnedComment = response.body.comment;
+        expect(returnedComment).toEqual(
+          expect.objectContaining({
+            comment_id: expect.any(Number),
+            body: newComment.body,
+            article_id: articleId,
+            author: newComment.username,
+            votes: 0,
+            created_at: expect.stringMatching(
+              /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/
+            ),
+          })
+        );
+      });
+  });
+});
+
+describe.skip("Post /api/articles/:article_id/comments", () => {
+  test("Status 201 - responds with the newly added comment", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: "Just another random comment.",
+    };
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send(newComment)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.comment).toEqual({
+          article_id: 3,
+          author: "butter_bridge",
+          body: "Just another random comment.",
+          comment_id: 19,
+          created_at: expect.any(String),
+          votes: 0,
+        });
+      });
+  });
+  test("Status 201 - addition of extra properties in post body are ignored ", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: "Just another random comment.",
+      extra: "This property will be ignored",
+      anotherExtra: "This property will also be ignored",
+    };
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send(newComment)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.comment).toEqual({
+          article_id: 3,
+          author: "butter_bridge",
+          body: "Just another random comment.",
+          comment_id: 19,
+          created_at: expect.any(String),
+          votes: 0,
+        });
+      });
+  });
+  test("Status 400 - missing properties from post body ", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: null,
+    };
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send(newComment)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid post body");
+      });
+  });
+  test("Status 400 - properties in incorrect format ", () => {
+    const newComment = {
+      username: "butter_bridge",
+      bodys: 19998,
+    };
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send(newComment)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid post body");
+      });
+  });
+  test("Status 400 - invalid article ID ", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: "Just another random comment.",
+    };
+    return request(app)
+      .post("/api/articles/25Nonsense/comments")
+      .send(newComment)
+      .expect(400)
+      .then(({ body }) =>
+        expect(body.msg).toBe("Bad request, no ID provided for the article.")
+      );
+  });
+  test("status 404 - valid but non-existent username ", () => {
+    const newComment = {
+      username: "cool_dev",
+      body: "Just another random comment.",
+    };
+    return request(app)
+      .post("/api/articles/3/comments")
+      .send(newComment)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Username not found");
+      });
+  });
+  test("Status 404 - valid but non-existent article ID", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: "Just another random comment.",
+    };
+    return request(app)
+      .post("/api/articles/99911/comments")
+      .send(newComment)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Article ID not found");
+      });
+  });
+});
+
+// 8
+
+describe.skip("PATCH /api/comments/:comment_id", () => {
+  const newVote = { inc_votes: 20 };
+  test("Status 200 - updates the given articles' votes and returns it", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send(newVote)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.article).toEqual({
+          article_id: 1,
+          title: "Living in the shadow of a great man",
+          body: "I find this existence challenging",
+          votes: 120,
+          topic: "mitch",
+          author: "butter_bridge",
+          created_at: expect.any(String),
+          article_img_url:
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        });
+      });
+  });
+  test("Status 400 - incomplete request body ", () => {
+    const newVote = {};
+    return request(app)
+      .patch("/api/articles/1")
+      .send(newVote)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid post body");
+      });
+  });
+  test("Status 400 - invalid votes format ", () => {
+    const newVote = { inc_votes: "twenty" };
+    return request(app)
+      .patch("/api/articles/1")
+      .send(newVote)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Bad request - Invalid input data type");
+      });
+  });
+  test("Status 400 - invalid article ID", () => {
+    const newVote = { inc_votes: 20 };
+    return request(app)
+      .patch("/api/articles/25Nonsense")
+      .send(newVote)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Bad request - Invalid input data type");
+      });
+  });
+  test("Status 404 - valid but non-existent article ID", () => {
+    const newVote = { inc_votes: 20 };
+    return request(app)
+      .patch("/api/articles/99999")
+      .send(newVote)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Article not found");
       });
   });
 });
