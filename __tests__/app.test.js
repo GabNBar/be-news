@@ -108,10 +108,6 @@ describe("/api/articles", () => {
 
           expect(typeof article.body).toBe("undefined");
         });
-
-        expect(articles).toBeSortedBy("created_at", {
-          descending: true,
-        });
       });
   });
   test("GET - status 200 - responds list of articles sorted date descending", () => {
@@ -126,6 +122,56 @@ describe("/api/articles", () => {
             descending: true,
           });
         });
+      });
+  });
+});
+//6
+describe("GET /api/:article_id/articles", () => {
+  test("responds with status 200 and all requested comments for a given article", () => {
+    return request(app)
+      .get("/api/1/comments")
+      .expect(200)
+      .then((res) => {
+        const { allComments } = res.body;
+
+        //Assert that comments are coming in.
+        expect(allComments.length > 0).toBe(true);
+
+        //Assert that we get the amount of comments we are expecting.
+        expect(allComments.length === 11).toBe(true);
+
+        allComments.forEach((comment) => {
+          expect(comment).toHaveProperty("comment_id");
+          expect(comment).toHaveProperty("body");
+          expect(comment).toHaveProperty("article_id");
+          expect(comment).toHaveProperty("author");
+          expect(comment).toHaveProperty("votes");
+          expect(comment).toHaveProperty("created_at");
+        });
+      });
+  });
+
+  test("GET - status 200 - responds list of articles sorted date descending", () => {
+    return request(app)
+      .get("/api/1/comments")
+      .expect(200)
+      .then((res) => {
+        const { allComments } = res.body;
+
+        allComments.forEach(() => {
+          expect(allComments).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
+      });
+  });
+
+  test("responds with status 404 for no comments at given article", () => {
+    return request(app)
+      .get("/api/555/comments")
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe("No comments here.🙀");
       });
   });
 });
