@@ -28,8 +28,21 @@ exports.getArticles = (req, res, next) => {
 exports.getCommentsByArticle = (req, res, next) => {
   const articleId = req.params.article_id;
   fetchCommentsByArticles(articleId)
-    .then((allComments) => {
-      res.status(200).send({ allComments });
+    .then((comments) => {
+      res.status(200).send({ comments });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+exports.patchArticlesVotes = (req, res, next) => {
+  const { article_id } = req.params;
+  const { inc_votes } = req.body;
+
+  updateArticlesVotes(article_id, inc_votes)
+    .then((updatedArticle) => {
+      res.status(200).send({ article: updatedArticle });
     })
     .catch((err) => {
       next(err);
